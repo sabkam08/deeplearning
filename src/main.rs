@@ -1,33 +1,26 @@
 mod data;
-use data::doc_loader::load_all_documents;
+mod model;
+mod inference;
+
+use data::{loader::load_documents, chunker::chunk_text, retriever::retrieve_best_chunk};
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
+    println!("Loading school calendar documents...");
 
-    match args[1].as_str() {
-        "train" => {
-            println!("Loading documents...");
+    let corpus = load_documents("data_docs")
+        .expect("Failed to load documents");
 
-            let corpus = load_all_documents("data_docs")
-                .expect("Failed to load documents");
+    let chunks = chunk_text(&corpus);
 
-            println!("Documents loaded.");
-            println!("Corpus length: {}", corpus.len());
+    println!("Enter your question:");
 
-            // Pass corpus into tokenizer + dataset creation
-        }
+    let mut question = String::new();
+    std::io::stdin().read_line(&mut question).unwrap();
 
-        "ask" => {
-            println!("Enter your question:");
-            let mut question = String::new();
-            std::io::stdin().read_line(&mut question).unwrap();
+    let best_chunk = retrieve_best_chunk(&question, &chunks);
 
-            let corpus = load_all_documents("data_docs")
-                .expect("Failed to load documents");
+    println!("Most relevant section:\n{}\n", best_chunk);
 
-            // Combine question + corpus for inference
-        }
-
-        _ => println!("Usage: cargo run -- train | ask"),
-    }
+    // Load model + tokenizer here
+    // Call answer_question(...)
 }
